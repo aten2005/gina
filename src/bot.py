@@ -1,15 +1,13 @@
 import discord
 from discord.ext import commands
 from lib.taskmanager import ComposioAgent
-import asyncio
 from dotenv import load_dotenv
 import json
 import os
-import datetime
+
 
 load_dotenv()
-
-msg_cache=[]
+# msg_cache=[]
 
 def load_db():
     with open("db.json","r") as f:
@@ -38,40 +36,34 @@ async def on_ready():
 async def on_message(message):
     if message.author == bot.user:
         return
-    
-    if len(msg_cache)<20:
-        msg_cache.append([message.author.name,message.content])
-    else:
-        msg_cache.pop(0)
-        msg_cache.append([message.author.name,message.content])
-    print(msg_cache)
+    # if len(msg_cache)<20:
+    #     msg_cache.append([message.author.name,message.content])
+    # else:
+    #     msg_cache.pop(0)
+    #     msg_cache.append([message.author.name,message.content])
+    # print(msg_cache)
 
     if bot.user.mentioned_in(message):
         command = message.content.replace(f"@{bot.user.name}", "").strip()
         user_id = str(message.author.id)
         discord_channel = message.channel
         
-        
-        
-
         # Check if the user is in the mock database
         if user_id not in user_database:
             #Create new account
-            user_database[user_id] = message.author.id
+            entity_id = "gina_"+user_id
+            user_database[user_id] = entity_id
             save_db(user_database)
             embed = discord.Embed(description="Check private message for instructions", color=0x00FF00)
             await discord_channel.send(embed=embed)
-            
         else:
-            user_id = str(user_database[user_id])
+            entity_id = str(user_database[user_id])
 
-        
-        
         # Proceed with ComposioAgent
-        if user_id not in user_agents:
-            user_agents[user_id] = ComposioAgent(user_id, discord_channel, bot=bot)
+        if entity_id not in user_agents:
+            user_agents[entity_id] = ComposioAgent(entity_id, discord_channel, bot=bot)
 
-        agent = user_agents[user_id]
+        agent = user_agents[entity_id]
         if not await agent.connect(message.author):
             embed = discord.Embed(title="Connection Failed", description="Failed to connect to Composio services.", color=0xFF0000)
             await message.reply(embed=embed)
